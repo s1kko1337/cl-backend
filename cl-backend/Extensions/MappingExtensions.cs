@@ -118,17 +118,21 @@ namespace cl_backend.Extensions
             return new ProductReviewDTO
             {
                 Id = review.Id,
+                AuthorId = review.AuthorId,
                 AuthorName = review.AuthorName,
                 Rating = review.Rating,
                 Comment = review.Comment,
-                CreatedAt = review.CreatedAt
+                CreatedAt = review.CreatedAt,
+                UpdatedAt = review.UpdatedAt,
+                ReviewImageUrl = review.ReviewImageUrl
             };
         }
-
+        
         public static ProductReview ToEntity(this ProductReviewCreateDTO dto, int productId)
         {
             return new ProductReview
             {
+                AuthorId = dto.AuthorId,
                 AuthorName = dto.AuthorName,
                 Rating = dto.Rating,
                 Comment = dto.Comment,
@@ -136,15 +140,16 @@ namespace cl_backend.Extensions
                 CreatedAt = DateTime.UtcNow
             };
         }
-
+        
         public static void UpdateFromDTO(this ProductReview review, ProductReviewUpdateDTO dto)
         {
             review.AuthorName = dto.AuthorName;
             review.Rating = dto.Rating;
             review.Comment = dto.Comment;
+            review.UpdatedAt = DateTime.UtcNow;
         }
-
         #endregion
+
 
         #region User Mapping
 

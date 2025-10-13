@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using cl_backend.Models.User;
 
 namespace cl_backend.Models.Products
 {
@@ -9,6 +10,8 @@ namespace cl_backend.Models.Products
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        public int AuthorId { get; set; }
+
         public required string AuthorName { get; set; }
         public int Rating { get; set; }
         public required string Comment { get; set; }
@@ -16,5 +19,7 @@ namespace cl_backend.Models.Products
 
         public int ProductId { get; set; }
         //public required Product Product { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string? ReviewImageUrl { get; set; }
     }
 }

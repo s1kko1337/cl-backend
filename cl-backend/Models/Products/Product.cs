@@ -15,7 +15,7 @@ namespace cl_backend.Models.Products
         public int StockQuantity { get; set; } 
         public required string SKU { get; set; } // Артикул товара (уникальный идентификатор)
         public int CategoryId { get; set; }
-        public Category Category { get; set; }
+        public required Category Category { get; set; }
 
         public List<ProductImage> Images { get; set; } = new List<ProductImage>();
         public List<ProductReview> Reviews { get; set; } = new List<ProductReview>();

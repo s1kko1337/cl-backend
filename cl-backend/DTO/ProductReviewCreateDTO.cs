@@ -4,6 +4,9 @@ namespace cl_backend.DTO
 {
     public class ProductReviewCreateDTO
     {
+        [Required(ErrorMessage = "AuthorId is required")]
+        public int AuthorId { get; set; }
+
         [Required(ErrorMessage = "AuthorName is required")]
         [StringLength(100, MinimumLength = 1, ErrorMessage = "AuthorName must be between 1 and 100 characters")]
         public required string AuthorName { get; set; }
