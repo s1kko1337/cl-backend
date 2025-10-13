@@ -27,7 +27,6 @@ namespace cl_backend.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Check if user already exists
             if (_context.Users.Any(u => u.Login == request.Username))
             {
                 return BadRequest(new AuthResponse
