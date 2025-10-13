@@ -9,7 +9,7 @@ namespace cl_backend.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/categories")]
     public class CategoriesController : ControllerBase
     {
         private readonly ApplicationContext _context;
@@ -21,6 +21,7 @@ namespace cl_backend.Controllers
 
         // GET: api/categories - получить все категории с продуктами
         [HttpGet]
+        [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategories()
         {
             var categories = await _context.Categories
@@ -53,6 +54,7 @@ namespace cl_backend.Controllers
         }
 
         // GET: api/categories/5/products - получить товары по категории
+        [Authorize(Roles = "admin, user")]
         [HttpGet("{id}/products")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductsByCategory(int id)
         {
@@ -72,6 +74,7 @@ namespace cl_backend.Controllers
         }
 
         // POST: api/categories - создать новую категорию
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<ActionResult<CategoryDTO>> CreateCategory(CategoryCreateDTO categoryDto)
         {
@@ -92,6 +95,7 @@ namespace cl_backend.Controllers
         }
 
         // PUT: api/categories/5 - обновить категорию
+        [Authorize(Roles = "admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategory(int id, CategoryUpdateDTO categoryDto)
         {
@@ -128,6 +132,7 @@ namespace cl_backend.Controllers
         }
 
         // DELETE: api/categories/5 - удалить категорию
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {

@@ -9,7 +9,7 @@ namespace cl_backend.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/products")]
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationContext _context;
