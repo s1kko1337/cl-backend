@@ -27,6 +27,7 @@ namespace cl_backend.Controllers
 
         // GET: api/products/5/images - получить все изображения товара
         [HttpGet]
+        [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<ProductImageDTO>>> GetProductImages(int productId)
         {
             var product = await _context.Products.FindAsync(productId);
@@ -44,6 +45,7 @@ namespace cl_backend.Controllers
 
         // GET: api/products/5/images/10 - получить изображение по ID
         [HttpGet("{id}")]
+        [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<ProductImageDTO>> GetProductImage(int productId, int id)
         {
             var product = await _context.Products.FindAsync(productId);
@@ -209,6 +211,7 @@ namespace cl_backend.Controllers
 
         // POST: api/products/5/images - загрузить изображение товара
         [HttpPost]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<ProductImageDTO>> UploadProductImage(int productId, IFormFile file, [FromForm] string? altText)
         {
             var product = await _context.Products.FindAsync(productId);
@@ -222,13 +225,11 @@ namespace cl_backend.Controllers
                 return BadRequest("No file provided.");
             }
 
-            // Проверка размера файла
             if (file.Length > MaxFileSize)
             {
                 return BadRequest($"File size must not exceed {MaxFileSize / (1024 * 1024)}MB.");
             }
 
-            // Проверка расширения файла
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
             if (!AllowedExtensions.Contains(fileExtension))
             {
@@ -278,6 +279,7 @@ namespace cl_backend.Controllers
 
         // PUT: api/products/5/images/10 - обновить данные изображения (только altText)
         [HttpPut("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateProductImage(int productId, int id, [FromBody] ProductImageUpdateDTO imageDto)
         {
             if (!ModelState.IsValid)
@@ -322,6 +324,7 @@ namespace cl_backend.Controllers
 
         // DELETE: api/products/5/images/10 - удалить изображение товара
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteProductImage(int productId, int id)
         {
             var product = await _context.Products.FindAsync(productId);
