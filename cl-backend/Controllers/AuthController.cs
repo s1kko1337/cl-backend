@@ -1,73 +1,134 @@
 ﻿using cl_backend.DbContexts;
 using cl_backend.DTO;
-using cl_backend.Models.User;
+using cl_backend.Extensions;
 using cl_backend.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace cl_backend.Controllers
 {
-    //[Route("/api/[controller]")]
     [ApiController]
     public class AuthController : Controller
     {
-        private ApplicationContext _context;
+        private readonly ApplicationContext _context;
 
-        public AuthController()
+        public AuthController(ApplicationContext context)
         {
-            _context = new ApplicationContext();
+            _context = context;
         }
 
         [HttpPost("/register")]
         public IActionResult Register([FromBody] RegisterRequest request)
         {
-            _context.Users.Add(new Models.User.User { Login = request.Username, Password = AuthUtils.HashPassword(request.Password), Role = "user" });
-            var id = _context.SaveChanges();
-            return Ok(id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Check if user already exists
+            if (_context.Users.Any(u => u.Login == request.Username))
+            {
+                return BadRequest(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Username already exists!"
+                });
+            }
+
+            try
+            {
+                var user = request.ToEntity();
+                user.Password = AuthUtils.HashPassword(user.Password);
+
+                _context.Users.Add(user);
+                _context.SaveChanges();
+
+                return Ok(new AuthResponse
+                {
+                    Success = true,
+                    Message = "User registered successfully!",
+                    User = user.ToDTO()
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new AuthResponse
+                {
+                    Success = false,
+                    Message = $"An error occurred during registration: {ex.Message}"
+                });
+            }
         }
 
         [HttpPost("/login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var identity = GetIdentity(request.Username, request.Password);
             if (identity == null)
             {
-                return BadRequest(new { errorText = "Invalid username or password!" });
+                return BadRequest(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Invalid username or password!"
+                });
             }
-            var now = DateTime.UtcNow;
-            var jwt = new JwtSecurityToken
+
+            try
+            {
+                var user = _context.Users.FirstOrDefault(u => u.Login == request.Username);
+
+                var now = DateTime.UtcNow;
+                var jwt = new JwtSecurityToken
                 (
                     issuer: AuthOptions.ISSUER,
                     audience: AuthOptions.AUDIENCE,
                     notBefore: now,
                     claims: identity.Claims,
                     expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
-                    signingCredentials: new Microsoft.IdentityModel.Tokens.SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
+                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
                 );
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            var response = new
+                var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+                return Ok(new AuthResponse
+                {
+                    Success = true,
+                    Message = "Login successful!",
+                    User = user?.ToDTO(),
+                    Token = encodedJwt
+                });
+            }
+            catch (Exception ex)
             {
-                access_token = encodedJwt,
-                username = identity.Name
-            };
-            
-            return Ok(JsonConvert.SerializeObject(response));  
+                return StatusCode(500, new AuthResponse
+                {
+                    Success = false,
+                    Message = $"An error occurred during login: {ex.Message}"
+                });
+            }
         }
 
-        private ClaimsIdentity GetIdentity(string username, string password) 
+        private ClaimsIdentity? GetIdentity(string username, string password)
         {
             var user = _context.Users.FirstOrDefault(u => u.Login == username);
             if (user == null)
             {
                 return null;
             }
-            if (!AuthUtils.VerifyPassword(password, user.Password)) { return null; }
 
-            var claims = new List<Claim>()
+            if (!AuthUtils.VerifyPassword(password, user.Password))
+            {
+                return null;
+            }
+
+            var claims = new List<Claim>
             {
                 new Claim(ClaimsIdentity.DefaultNameClaimType, user.Login),
                 new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role),

@@ -1,6 +1,6 @@
 ﻿using cl_backend.DbContexts;
 using cl_backend.DTO;
-using cl_backend.Extensions.cl_backend.Extensions;
+using cl_backend.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

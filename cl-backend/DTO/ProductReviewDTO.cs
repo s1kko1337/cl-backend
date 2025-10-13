@@ -3,9 +3,9 @@
     public class ProductReviewDTO
     {
         public int Id { get; set; }
-        public string AuthorName { get; set; } = string.Empty;
+        public required string AuthorName { get; set; }
         public int Rating { get; set; }
-        public string Comment { get; set; } = string.Empty;
+        public required string Comment { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

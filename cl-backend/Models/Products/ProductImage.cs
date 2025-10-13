@@ -12,6 +12,6 @@ namespace cl_backend.Models.Products
         public string? AltText { get; set; }
 
         public int ProductId { get; set; }
-        public required Product Product { get; set; }
+        //public required Product Product { get; set; }
     }
 }

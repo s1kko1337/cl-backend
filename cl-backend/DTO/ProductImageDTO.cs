@@ -3,7 +3,7 @@
     public class ProductImageDTO
     {
         public int Id { get; set; }
-        public string ImageUrl { get; set; } = string.Empty;
+        public required string ImageUrl { get; set; }
         public string? AltText { get; set; }
     }
 }
