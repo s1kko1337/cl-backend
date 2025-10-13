@@ -5,6 +5,7 @@ using cl_backend.Models.Products;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO.Compression;
 
 namespace cl_backend.Controllers
 {
@@ -15,7 +16,7 @@ namespace cl_backend.Controllers
     {
         private readonly ApplicationContext _context;
         private readonly IWebHostEnvironment _env;
-        private const long MaxFileSize = 5 * 1024 * 1024; // 5MB
+        private const long MaxFileSize = 12 * 1024 * 1024; // 12MB
         private readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
 
         public ProductImagesController(ApplicationContext context, IWebHostEnvironment env)
@@ -60,6 +61,150 @@ namespace cl_backend.Controllers
             }
 
             return image.ToDTO();
+        }
+
+        // GET: api/products/5/images/10/download - скачать конкретное изображение товара
+        [HttpGet("{id}/download")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadProductImage(int productId, int id)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return NotFound("Product not found.");
+            }
+
+            var image = await _context.ProductImages
+                .FirstOrDefaultAsync(i => i.Id == id && i.ProductId == productId);
+
+            if (image == null)
+            {
+                return NotFound("Image not found.");
+            }
+
+            try
+            {
+                var uploadsDirectory = Path.Combine(_env.ContentRootPath, "uploads", $"product-{productId}-images");
+                var fileName = Path.GetFileName(image.ImageUrl);
+                var filePath = Path.Combine(uploadsDirectory, fileName);
+
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound("File not found on server.");
+                }
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                var contentType = GetContentType(filePath);
+
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while downloading the file: {ex.Message}");
+            }
+        }
+
+        // GET: api/products/5/images/download-all - скачать все изображения товара как ZIP архив
+        [HttpGet("download-all")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadAllProductImages(int productId)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return NotFound("Product not found.");
+            }
+
+            var images = await _context.ProductImages
+                .Where(i => i.ProductId == productId)
+                .ToListAsync();
+
+            if (!images.Any())
+            {
+                return NotFound("No images found for this product.");
+            }
+
+            try
+            {
+                var uploadsDirectory = Path.Combine(_env.ContentRootPath, "uploads", $"product-{productId}-images");
+                var tempZipPath = Path.Combine(Path.GetTempPath(), $"product-{productId}-images-{Guid.NewGuid()}.zip");
+
+                // Создание ZIP архива
+                using (var zipArchive = System.IO.Compression.ZipFile.Open(tempZipPath, System.IO.Compression.ZipArchiveMode.Create))
+                {
+                    foreach (var image in images)
+                    {
+                        var fileName = Path.GetFileName(image.ImageUrl);
+                        var filePath = Path.Combine(uploadsDirectory, fileName);
+
+                        if (System.IO.File.Exists(filePath))
+                        {
+                            zipArchive.CreateEntryFromFile(filePath, fileName);
+                        }
+                    }
+                }
+
+                var zipBytes = await System.IO.File.ReadAllBytesAsync(tempZipPath);
+
+                // Удаление временного файла
+                System.IO.File.Delete(tempZipPath);
+
+                return File(zipBytes, "application/zip", $"product-{productId}-images.zip");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while creating the archive: {ex.Message}");
+            }
+        }
+
+        // GET: api/products/5/images/info - получить информацию о всех изображениях товара (URL + описание)
+        [HttpGet("info")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<ProductImageDTO>>> GetProductImagesInfo(int productId)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return NotFound("Product not found.");
+            }
+
+            var images = await _context.ProductImages
+                .Where(i => i.ProductId == productId)
+                .ToListAsync();
+
+            return Ok(images.Select(i => new ProductImageDTO
+            {
+                Id = i.Id,
+                ImageUrl = $"{Request.Scheme}://{Request.Host}/uploads/product-{productId}-images/{Path.GetFileName(i.ImageUrl)}",
+                AltText = i.AltText
+            }));
+        }
+
+        // GET: api/products/5/images/10/info - получить информацию о конкретном изображении (URL + описание)
+        [HttpGet("{id}/info")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ProductImageDTO>> GetProductImageInfo(int productId, int id)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return NotFound("Product not found.");
+            }
+
+            var image = await _context.ProductImages
+                .FirstOrDefaultAsync(i => i.Id == id && i.ProductId == productId);
+
+            if (image == null)
+            {
+                return NotFound("Image not found.");
+            }
+
+            return Ok(new ProductImageDTO
+            {
+                Id = image.Id,
+                ImageUrl = $"{Request.Scheme}://{Request.Host}/uploads/product-{productId}-images/{Path.GetFileName(image.ImageUrl)}",
+                AltText = image.AltText
+            });
         }
 
         // POST: api/products/5/images - загрузить изображение товара
@@ -220,6 +365,19 @@ namespace cl_backend.Controllers
         private bool ProductImageExists(int id)
         {
             return _context.ProductImages.Any(e => e.Id == id);
+        }
+
+        private string GetContentType(string filePath)
+        {
+            var extension = Path.GetExtension(filePath).ToLower();
+            return extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "application/octet-stream"
+            };
         }
     }
 }
