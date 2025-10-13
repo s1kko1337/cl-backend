@@ -21,6 +21,7 @@ namespace cl_backend.Controllers
 
         // GET: api/products/5/reviews - получить все отзывы товара
         [HttpGet]
+        [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<ProductReviewDTO>>> GetProductReviews(int productId)
         {
             var product = await _context.Products.FindAsync(productId);
@@ -38,6 +39,7 @@ namespace cl_backend.Controllers
 
         // GET: api/products/5/reviews/10 - получить отзыв по ID
         [HttpGet("{id}")]
+        [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<ProductReviewDTO>> GetProductReview(int productId, int id)
         {
             var product = await _context.Products.FindAsync(productId);
@@ -59,6 +61,7 @@ namespace cl_backend.Controllers
 
         // POST: api/products/5/reviews - добавить отзыв товара
         [HttpPost]
+        [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<ProductReviewDTO>> CreateProductReview(int productId, ProductReviewCreateDTO reviewDto)
         {
             if (!ModelState.IsValid)
@@ -81,6 +84,7 @@ namespace cl_backend.Controllers
 
         // PUT: api/products/5/reviews/10 - обновить отзыв товара
         [HttpPut("{id}")]
+        [Authorize(Roles = "admin, user")]
         public async Task<IActionResult> UpdateProductReview(int productId, int id, ProductReviewUpdateDTO reviewDto)
         {
             if (!ModelState.IsValid)
@@ -125,6 +129,7 @@ namespace cl_backend.Controllers
 
         // DELETE: api/products/5/reviews/10 - удалить отзыв товара
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin, user")]
         public async Task<IActionResult> DeleteProductReview(int productId, int id)
         {
             var product = await _context.Products.FindAsync(productId);

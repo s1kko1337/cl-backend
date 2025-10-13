@@ -21,6 +21,7 @@ namespace cl_backend.Controllers
 
         // GET: api/products - получить все товары
         [HttpGet]
+        [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProducts()
         {
             var products = await _context.Products
@@ -34,6 +35,7 @@ namespace cl_backend.Controllers
 
         // GET: api/products/5 - получить товар по ID
         [HttpGet("{id}")]
+        [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<ProductDTO>> GetProduct(int id)
         {
             var product = await _context.Products
@@ -52,6 +54,7 @@ namespace cl_backend.Controllers
 
         // POST: api/products - создать новый товар
         [HttpPost]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<ProductDTO>> CreateProduct(ProductCreateDTO productDto)
         {
             if (!ModelState.IsValid)
@@ -88,6 +91,7 @@ namespace cl_backend.Controllers
 
         // PUT: api/products/5 - обновить товар
         [HttpPut("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateProduct(int id, ProductUpdateDTO productDto)
         {
             if (!ModelState.IsValid)
@@ -141,6 +145,7 @@ namespace cl_backend.Controllers
 
         // DELETE: api/products/5 - удалить товар
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var product = await _context.Products
