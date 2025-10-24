@@ -1,6 +1,7 @@
 ﻿using cl_backend.DTO;
 using cl_backend.Models.Categories;
 using cl_backend.Models.Products;
+using cl_backend.Models.Sales;
 using cl_backend.Models.User;
 
 namespace cl_backend.Extensions
@@ -171,6 +172,47 @@ namespace cl_backend.Extensions
                 Password = dto.Password,
                 Role = "user" // Default role for new users
             };
+        }
+
+        #endregion
+
+        #region Order Mapping
+
+        public static OrderDTO ToDTO(this Order order)
+        {
+            return new OrderDTO
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                CustomerName = order.CustomerName,
+                CustomerPhone = order.CustomerPhone,
+                DeliveryAddress = order.DeliveryAddress,
+                PaymentMethod = order.PaymentMethod,
+                TotalAmount = order.TotalAmount,
+                Status = order.Status,
+                CreatedAt = order.CreatedAt,
+                UpdatedAt = order.UpdatedAt,
+                OrderItems = order.OrderItems?.Select(oi => oi.ToDTO()).ToList() ?? new List<OrderItemDTO>()
+            };
+        }
+
+        public static OrderItemDTO ToDTO(this OrderItem orderItem)
+        {
+            return new OrderItemDTO
+            {
+                Id = orderItem.Id,
+                ProductId = orderItem.ProductId,
+                ProductName = orderItem.ProductName,
+                PriceAtPurchase = orderItem.PriceAtPurchase,
+                Quantity = orderItem.Quantity,
+                Subtotal = orderItem.Subtotal
+            };
+        }
+
+        public static void UpdateFromDTO(this Order order, OrderUpdateDTO dto)
+        {
+            order.Status = dto.Status;
+            order.UpdatedAt = DateTime.UtcNow;
         }
 
         #endregion
