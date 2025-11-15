@@ -1,6 +1,7 @@
 using cl_backend;
 using cl_backend.DbContexts;
 using cl_backend.Models;
+using cl_backend.Models.User;
 using cl_backend.Services;
 using cl_backend.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
