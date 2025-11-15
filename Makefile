@@ -18,15 +18,18 @@ help: ## Показать справку по командам
 
 # ============ Основные команды ============
 
-deploy: ## Полное развертывание проекта (build + up + migrate + init-users)
+deploy: ## Полное развертывание проекта (build + up + health)
 	@echo "$(BLUE)=== Полное развертывание проекта ===$(NC)"
 	$(MAKE) build
 	$(MAKE) up
-	$(MAKE) migrate
-	$(MAKE) init-users
+	$(MAKE) health
 	@echo "$(GREEN)=== Развертывание завершено! ===$(NC)"
 	@echo "$(BLUE)API доступен по адресу:$(NC) http://localhost:$(API_PORT)"
 	@echo "$(BLUE)Swagger UI:$(NC) http://localhost:$(API_PORT)/swagger"
+	@echo ""
+	@echo "$(GREEN)=== Тестовые пользователи ===$(NC)"
+	@echo "  $(BLUE)Admin:$(NC) admin@admin.admin / admin@admin.admin"
+	@echo "  $(BLUE)User:$(NC)  test@test.test / test@test.test"
 
 build: ## Собрать Docker образы
 	@echo "$(BLUE)Сборка Docker образов...$(NC)"
@@ -67,21 +70,26 @@ logs-db: ## Показать логи БД
 
 # ============ База данных ============
 
-migrate: ## Применить миграции к БД
-	@echo "$(BLUE)Ожидание готовности API...$(NC)"
-	@sleep 10
-	@echo "$(BLUE)Применение миграций...$(NC)"
-	docker exec $(API_CONTAINER) dotnet ef database update || true
-	@echo "$(GREEN)Миграции применены!$(NC)"
+health: ## Проверить готовность API
+	@echo "$(BLUE)Проверка готовности API...$(NC)"
+	@echo "Ожидание (макс 60 секунд)..."
+	@for i in $$(seq 1 60); do \
+		if curl -s -f http://localhost:$(API_PORT)/swagger/index.html > /dev/null 2>&1; then \
+			echo "$(GREEN)✓ API готов!$(NC)"; \
+			exit 0; \
+		fi; \
+		printf "."; \
+		sleep 1; \
+	done; \
+	echo ""; \
+	echo "$(YELLOW)⚠ API не готов после 60 секунд, проверьте логи: make logs-api$(NC)"; \
+	exit 1
 
-init-db: ## Пересоздать БД с миграциями
+init-db: ## Пересоздать БД (очистить и пересоздать с нуля)
 	@echo "$(BLUE)Пересоздание базы данных...$(NC)"
 	$(COMPOSE) down -v
-	$(COMPOSE) up -d postgres
-	@sleep 5
-	$(COMPOSE) up -d api
-	@sleep 10
-	$(MAKE) migrate
+	$(COMPOSE) up -d
+	$(MAKE) health
 	@echo "$(GREEN)База данных инициализирована!$(NC)"
 
 db-shell: ## Подключиться к БД через psql
@@ -96,13 +104,6 @@ db-restore: ## Восстановить БД из резервной копии 
 	@echo "$(BLUE)Восстановление из резервной копии...$(NC)"
 	docker exec -i $(DB_CONTAINER) psql -U postgres -d cl_backend_db < $(FILE)
 	@echo "$(GREEN)База данных восстановлена!$(NC)"
-
-# ============ Пользователи ============
-
-init-users: ## Создать тестовых пользователей (admin@admin.admin и test@test.test)
-	@echo "$(BLUE)Инициализация пользователей...$(NC)"
-	@chmod +x scripts/init-users.sh
-	@bash scripts/init-users.sh
 
 # ============ Очистка ============
 
