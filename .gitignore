@@ -472,4 +472,19 @@ bin/
 obj/
 /packages/
 riderModule.iml
-/_ReSharper.Caches/```
+/_ReSharper.Caches/
+
+##
+## Docker & Deployment
+##
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Database backups
+backup_*.sql
+
+# Docker volumes
+docker-compose.override.yml```
