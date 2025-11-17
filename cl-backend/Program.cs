@@ -8,6 +8,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OfficeOpenXml;
+
+// Устанавливаем лицензию для EPPlus (некоммерческое использование)
+ExcelPackage.License.SetNonCommercialPersonal("Non-Commercial Use");
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

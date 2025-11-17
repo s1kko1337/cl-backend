@@ -14,12 +14,6 @@ namespace cl_backend.Services
 
     public class ExportService : IExportService
     {
-        public ExportService()
-        {
-            // Устанавливаем лицензию для EPPlus (некоммерческое использование)
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        }
-
         public byte[] ExportToCsv<T>(IEnumerable<T> data)
         {
             using var memoryStream = new MemoryStream();
