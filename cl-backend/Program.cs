@@ -109,6 +109,12 @@ using (var scope = app.Services.CreateScope())
         {
             logger.LogInformation("Пользователи уже существуют, пропуск инициализации");
         }
+
+        // Заполнение базы данных моковыми данными
+        logger.LogInformation("Проверка необходимости заполнения моковыми данными...");
+        var seeder = new DataSeeder(context);
+        seeder.SeedAllDataAsync().GetAwaiter().GetResult();
+        logger.LogInformation("Заполнение данными завершено");
     }
     catch (Exception ex)
     {
