@@ -23,7 +23,7 @@ namespace cl_backend.DbContexts
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=cl_backend_db;Username=postgres;Password=210176");
+            optionsBuilder.UseNpgsql("Host=postgres;Port=5432;Database=cl_backend_db;Username=postgres;Password=210176");
         }
     }
 }
