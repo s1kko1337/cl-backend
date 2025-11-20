@@ -89,6 +89,7 @@ using (var scope = app.Services.CreateScope())
             var adminUser = new User
             {
                 Login = "admin@admin.admin",
+                Username = "Admin",
                 Password = AuthUtils.HashPassword("admin@admin.admin"),
                 Role = "admin"
             };
@@ -96,6 +97,7 @@ using (var scope = app.Services.CreateScope())
             var testUser = new User
             {
                 Login = "test@test.test",
+                Username = "TestUser",
                 Password = AuthUtils.HashPassword("test@test.test"),
                 Role = "user"
             };

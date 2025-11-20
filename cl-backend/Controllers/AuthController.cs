@@ -2,6 +2,7 @@
 using cl_backend.DTO;
 using cl_backend.Extensions;
 using cl_backend.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -27,12 +28,12 @@ namespace cl_backend.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (_context.Users.Any(u => u.Login == request.Username))
+            if (_context.Users.Any(u => u.Login == request.Email))
             {
                 return BadRequest(new AuthResponse
                 {
                     Success = false,
-                    Message = "Username already exists!"
+                    Message = "Email already exists!"
                 });
             }
 
@@ -110,6 +111,66 @@ namespace cl_backend.Controllers
                 {
                     Success = false,
                     Message = $"An error occurred during login: {ex.Message}"
+                });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("/change-password")]
+        public IActionResult ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var userLogin = User.Identity?.Name;
+                if (string.IsNullOrEmpty(userLogin))
+                {
+                    return Unauthorized(new AuthResponse
+                    {
+                        Success = false,
+                        Message = "User not authenticated"
+                    });
+                }
+
+                var user = _context.Users.FirstOrDefault(u => u.Login == userLogin);
+                if (user == null)
+                {
+                    return NotFound(new AuthResponse
+                    {
+                        Success = false,
+                        Message = "User not found"
+                    });
+                }
+
+                if (!AuthUtils.VerifyPassword(request.CurrentPassword, user.Password))
+                {
+                    return BadRequest(new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Current password is incorrect"
+                    });
+                }
+
+                user.Password = AuthUtils.HashPassword(request.NewPassword);
+                _context.SaveChanges();
+
+                return Ok(new AuthResponse
+                {
+                    Success = true,
+                    Message = "Password changed successfully",
+                    User = user.ToDTO()
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new AuthResponse
+                {
+                    Success = false,
+                    Message = $"An error occurred while changing password: {ex.Message}"
                 });
             }
         }

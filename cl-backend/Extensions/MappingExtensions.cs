@@ -160,6 +160,7 @@ namespace cl_backend.Extensions
             {
                 Id = user.Id,
                 Login = user.Login,
+                Username = user.Username,
                 Role = user.Role
             };
         }
@@ -168,7 +169,8 @@ namespace cl_backend.Extensions
         {
             return new User
             {
-                Login = dto.Username,
+                Login = dto.Email,
+                Username = dto.Username,
                 Password = dto.Password,
                 Role = "user" // Default role for new users
             };

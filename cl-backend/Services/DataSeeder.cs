@@ -48,36 +48,42 @@ public class DataSeeder
             new User
             {
                 Login = "ivanov@mail.ru",
+                Username = "Иванов Иван",
                 Password = AuthUtils.HashPassword("password123"),
                 Role = "user"
             },
             new User
             {
                 Login = "petrova@yandex.ru",
+                Username = "Петрова Мария",
                 Password = AuthUtils.HashPassword("password123"),
                 Role = "user"
             },
             new User
             {
                 Login = "sidorov@gmail.com",
+                Username = "Сидоров Алексей",
                 Password = AuthUtils.HashPassword("password123"),
                 Role = "user"
             },
             new User
             {
                 Login = "kuznetsova@mail.ru",
+                Username = "Кузнецова Анна",
                 Password = AuthUtils.HashPassword("password123"),
                 Role = "user"
             },
             new User
             {
                 Login = "smirnov@yandex.ru",
+                Username = "Смирнов Дмитрий",
                 Password = AuthUtils.HashPassword("password123"),
                 Role = "user"
             },
             new User
             {
                 Login = "volkova@gmail.com",
+                Username = "Волкова Елена",
                 Password = AuthUtils.HashPassword("password123"),
                 Role = "user"
             }
