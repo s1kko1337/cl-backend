@@ -1,4 +1,4 @@
-# Backend API - E-Commerce Application
+# Backend API - учет товаров в интернет магазине
 
 RESTful API для интернет-магазина на .NET 9 с PostgreSQL.
 
@@ -223,7 +223,7 @@ make db-restore FILE=backup.sql
 
 ## Документация
 
-Полная документация проекта: [README.md в основном репозитории](https://github.com/s1kko1337/cl-backend)
+Полная документация проекта: [README.md в основном репозитории](https://github.com/s1kko1337/cl-mobile)
 
 ## Контакты
 
