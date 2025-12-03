@@ -8,19 +8,29 @@ using Microsoft.EntityFrameworkCore;
 
 namespace cl_backend.Services;
 
+/// <summary>
+/// Сервис для заполнения базы данных тестовыми данными
+/// </summary>
 public class DataSeeder
 {
     private readonly ApplicationContext _context;
     private readonly Random _random = new();
 
+    /// <summary>
+    /// Инициализирует новый экземпляр класса DataSeeder
+    /// </summary>
+    /// <param name="context">Контекст базы данных приложения</param>
     public DataSeeder(ApplicationContext context)
     {
         _context = context;
     }
 
+    /// <summary>
+    /// Запускает процесс заполнения базы данных всеми тестовыми данными
+    /// </summary>
+    /// <returns>Асинхронная задача</returns>
     public async Task SeedAllDataAsync()
     {
-        // Проверяем, нужно ли заполнять данные
         if (await _context.Categories.AnyAsync())
         {
             Console.WriteLine("База данных уже содержит данные. Пропускаем заполнение.");
@@ -39,6 +49,10 @@ public class DataSeeder
         Console.WriteLine("Заполнение базы данных завершено успешно!");
     }
 
+    /// <summary>
+    /// Создает тестовых пользователей в базе данных
+    /// </summary>
+    /// <returns>Асинхронная задача</returns>
     private async Task SeedUsersAsync()
     {
         Console.WriteLine("Создание пользователей...");
@@ -94,6 +108,10 @@ public class DataSeeder
         Console.WriteLine($"Создано {users.Count} пользователей.");
     }
 
+    /// <summary>
+    /// Создает категории товаров в базе данных
+    /// </summary>
+    /// <returns>Асинхронная задача</returns>
     private async Task SeedCategoriesAsync()
     {
         Console.WriteLine("Создание категорий...");
@@ -142,6 +160,10 @@ public class DataSeeder
         Console.WriteLine($"Создано {categories.Count} категорий.");
     }
 
+    /// <summary>
+    /// Создает товары в базе данных для всех категорий
+    /// </summary>
+    /// <returns>Асинхронная задача</returns>
     private async Task SeedProductsAsync()
     {
         Console.WriteLine("Создание товаров...");
@@ -149,7 +171,6 @@ public class DataSeeder
         var categories = await _context.Categories.ToListAsync();
         var products = new List<Product>();
 
-        // Электроника
         var electronics = categories.First(c => c.Name == "Электроника");
         products.AddRange(new[]
         {
@@ -191,7 +212,6 @@ public class DataSeeder
             }
         });
 
-        // Одежда
         var clothing = categories.First(c => c.Name == "Одежда");
         products.AddRange(new[]
         {
@@ -233,7 +253,6 @@ public class DataSeeder
             }
         });
 
-        // Обувь
         var shoes = categories.First(c => c.Name == "Обувь");
         products.AddRange(new[]
         {
@@ -266,7 +285,6 @@ public class DataSeeder
             }
         });
 
-        // Книги
         var books = categories.First(c => c.Name == "Книги");
         products.AddRange(new[]
         {
@@ -299,7 +317,6 @@ public class DataSeeder
             }
         });
 
-        // Спорт и отдых
         var sports = categories.First(c => c.Name == "Спорт и отдых");
         products.AddRange(new[]
         {
@@ -332,7 +349,6 @@ public class DataSeeder
             }
         });
 
-        // Дом и сад
         var home = categories.First(c => c.Name == "Дом и сад");
         products.AddRange(new[]
         {
@@ -365,7 +381,6 @@ public class DataSeeder
             }
         });
 
-        // Красота и здоровье
         var beauty = categories.First(c => c.Name == "Красота и здоровье");
         products.AddRange(new[]
         {
@@ -403,6 +418,10 @@ public class DataSeeder
         Console.WriteLine($"Создано {products.Count} товаров.");
     }
 
+    /// <summary>
+    /// Создает изображения для товаров в базе данных
+    /// </summary>
+    /// <returns>Асинхронная задача</returns>
     private async Task SeedProductImagesAsync()
     {
         Console.WriteLine("Создание изображений товаров...");
@@ -412,7 +431,6 @@ public class DataSeeder
 
         foreach (var product in products)
         {
-            // Для каждого товара создаем 1-3 изображения
             int imageCount = _random.Next(1, 4);
             for (int i = 1; i <= imageCount; i++)
             {
@@ -430,6 +448,10 @@ public class DataSeeder
         Console.WriteLine($"Создано {images.Count} изображений товаров.");
     }
 
+    /// <summary>
+    /// Создает отзывы на товары в базе данных
+    /// </summary>
+    /// <returns>Асинхронная задача</returns>
     private async Task SeedReviewsAsync()
     {
         Console.WriteLine("Создание отзывов...");
@@ -461,8 +483,7 @@ public class DataSeeder
             "Сергей Морозов", "Ольга Соколова", "Андрей Новиков"
         };
 
-        // Для каждого товара создаем 2-5 отзывов
-        foreach (var product in products.Take(20)) // Ограничиваем для первых 20 товаров
+        foreach (var product in products.Take(20))
         {
             int reviewCount = _random.Next(2, 6);
             var shuffledUsers = users.OrderBy(x => _random.Next()).Take(reviewCount).ToList();
@@ -490,6 +511,10 @@ public class DataSeeder
         Console.WriteLine($"Создано {reviews.Count} отзывов.");
     }
 
+    /// <summary>
+    /// Создает заказы с элементами заказов в базе данных
+    /// </summary>
+    /// <returns>Асинхронная задача</returns>
     private async Task SeedOrdersAsync()
     {
         Console.WriteLine("Создание заказов...");
@@ -508,10 +533,9 @@ public class DataSeeder
             new { Name = "Анна Викторовна Волкова", Phone = "+79197654321", Address = "проспект Мира, 54, Екатеринбург, Свердловская область, Россия" }
         };
 
-        var statuses = new[] { "Pending", "Processing", "Completed", "Completed", "Completed" }; // Больше завершенных заказов
-        var paymentMethods = new[] { "Card", "Card", "Cash" }; // Больше оплат картой
+        var statuses = new[] { "Pending", "Processing", "Completed", "Completed", "Completed" };
+        var paymentMethods = new[] { "Card", "Card", "Cash" };
 
-        // Создаем 15-20 заказов
         int orderCount = _random.Next(15, 21);
 
         for (int i = 0; i < orderCount; i++)
@@ -521,7 +545,6 @@ public class DataSeeder
             var status = statuses[_random.Next(statuses.Length)];
             var paymentMethod = paymentMethods[_random.Next(paymentMethods.Length)];
 
-            // Создаем заказ с 1-5 позициями
             var orderItems = new List<OrderItem>();
             int itemCount = _random.Next(1, 6);
             var selectedProducts = products.OrderBy(x => _random.Next()).Take(itemCount).ToList();

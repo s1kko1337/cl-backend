@@ -1,4 +1,4 @@
-﻿using cl_backend.DTO;
+using cl_backend.DTO;
 using cl_backend.Models.Categories;
 using cl_backend.Models.Products;
 using cl_backend.Models.Sales;
@@ -6,10 +6,16 @@ using cl_backend.Models.User;
 
 namespace cl_backend.Extensions
 {
+    /// <summary>
+    /// Методы расширения для маппинга между моделями и DTO
+    /// </summary>
     public static class MappingExtensions
     {
-        #region Category Mapping
-
+        /// <summary>
+        /// Преобразует модель Category в CategoryDTO
+        /// </summary>
+        /// <param name="category">Модель категории</param>
+        /// <returns>DTO категории с полной информацией</returns>
         public static CategoryDTO ToDTO(this Category category)
         {
             return new CategoryDTO
@@ -21,6 +27,11 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Преобразует CategoryCreateDTO в модель Category
+        /// </summary>
+        /// <param name="dto">DTO для создания категории</param>
+        /// <returns>Модель категории</returns>
         public static Category ToEntity(this CategoryCreateDTO dto)
         {
             return new Category
@@ -30,16 +41,22 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Обновляет модель Category данными из CategoryUpdateDTO
+        /// </summary>
+        /// <param name="category">Модель категории для обновления</param>
+        /// <param name="dto">DTO с новыми данными категории</param>
         public static void UpdateFromDTO(this Category category, CategoryUpdateDTO dto)
         {
             category.Name = dto.Name;
             category.Description = dto.Description;
         }
 
-        #endregion
-
-        #region Product Mapping
-
+        /// <summary>
+        /// Преобразует модель Product в ProductDTO
+        /// </summary>
+        /// <param name="product">Модель товара</param>
+        /// <returns>DTO товара с полной информацией включая категорию, изображения и отзывы</returns>
         public static ProductDTO ToDTO(this Product product)
         {
             return new ProductDTO
@@ -57,6 +74,11 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Преобразует ProductCreateDTO в модель Product
+        /// </summary>
+        /// <param name="dto">DTO для создания товара</param>
+        /// <returns>Модель товара</returns>
         public static Product ToEntity(this ProductCreateDTO dto)
         {
             return new Product
@@ -70,6 +92,11 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Обновляет модель Product данными из ProductUpdateDTO
+        /// </summary>
+        /// <param name="product">Модель товара для обновления</param>
+        /// <param name="dto">DTO с новыми данными товара</param>
         public static void UpdateFromDTO(this Product product, ProductUpdateDTO dto)
         {
             product.Name = dto.Name;
@@ -80,10 +107,11 @@ namespace cl_backend.Extensions
             product.CategoryId = dto.CategoryId;
         }
 
-        #endregion
-
-        #region ProductImage Mapping
-
+        /// <summary>
+        /// Преобразует модель ProductImage в ProductImageDTO
+        /// </summary>
+        /// <param name="image">Модель изображения товара</param>
+        /// <returns>DTO изображения товара</returns>
         public static ProductImageDTO ToDTO(this ProductImage image)
         {
             return new ProductImageDTO
@@ -94,6 +122,12 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Преобразует ProductImageCreateDTO в модель ProductImage
+        /// </summary>
+        /// <param name="dto">DTO для создания изображения</param>
+        /// <param name="productId">Идентификатор товара, к которому относится изображение</param>
+        /// <returns>Модель изображения товара</returns>
         public static ProductImage ToEntity(this ProductImageCreateDTO dto, int productId)
         {
             return new ProductImage
@@ -104,16 +138,22 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Обновляет модель ProductImage данными из ProductImageUpdateDTO
+        /// </summary>
+        /// <param name="image">Модель изображения для обновления</param>
+        /// <param name="dto">DTO с новыми данными изображения</param>
         public static void UpdateFromDTO(this ProductImage image, ProductImageUpdateDTO dto)
         {
             image.ImageUrl = dto.ImageUrl;
             image.AltText = dto.AltText;
         }
 
-        #endregion
-
-        #region ProductReview Mapping
-
+        /// <summary>
+        /// Преобразует модель ProductReview в ProductReviewDTO
+        /// </summary>
+        /// <param name="review">Модель отзыва</param>
+        /// <returns>DTO отзыва с полной информацией</returns>
         public static ProductReviewDTO ToDTO(this ProductReview review)
         {
             return new ProductReviewDTO
@@ -128,7 +168,13 @@ namespace cl_backend.Extensions
                 ReviewImageUrl = review.ReviewImageUrl
             };
         }
-        
+
+        /// <summary>
+        /// Преобразует ProductReviewCreateDTO в модель ProductReview
+        /// </summary>
+        /// <param name="dto">DTO для создания отзыва</param>
+        /// <param name="productId">Идентификатор товара, к которому относится отзыв</param>
+        /// <returns>Модель отзыва с установленной датой создания</returns>
         public static ProductReview ToEntity(this ProductReviewCreateDTO dto, int productId)
         {
             return new ProductReview
@@ -141,7 +187,12 @@ namespace cl_backend.Extensions
                 CreatedAt = DateTime.UtcNow
             };
         }
-        
+
+        /// <summary>
+        /// Обновляет модель ProductReview данными из ProductReviewUpdateDTO
+        /// </summary>
+        /// <param name="review">Модель отзыва для обновления</param>
+        /// <param name="dto">DTO с новыми данными отзыва</param>
         public static void UpdateFromDTO(this ProductReview review, ProductReviewUpdateDTO dto)
         {
             review.AuthorName = dto.AuthorName;
@@ -149,11 +200,12 @@ namespace cl_backend.Extensions
             review.Comment = dto.Comment;
             review.UpdatedAt = DateTime.UtcNow;
         }
-        #endregion
 
-
-        #region User Mapping
-
+        /// <summary>
+        /// Преобразует модель User в UserDTO
+        /// </summary>
+        /// <param name="user">Модель пользователя</param>
+        /// <returns>DTO пользователя для передачи клиенту</returns>
         public static UserDTO ToDTO(this User user)
         {
             return new UserDTO
@@ -165,6 +217,11 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Преобразует RegisterRequest в модель User
+        /// </summary>
+        /// <param name="dto">DTO запроса регистрации</param>
+        /// <returns>Модель пользователя с ролью по умолчанию "user"</returns>
         public static User ToEntity(this RegisterRequest dto)
         {
             return new User
@@ -172,14 +229,15 @@ namespace cl_backend.Extensions
                 Login = dto.Email,
                 Username = dto.Username,
                 Password = dto.Password,
-                Role = "user" // Default role for new users
+                Role = "user"
             };
         }
 
-        #endregion
-
-        #region Order Mapping
-
+        /// <summary>
+        /// Преобразует модель Order в OrderDTO
+        /// </summary>
+        /// <param name="order">Модель заказа</param>
+        /// <returns>DTO заказа с полной информацией и элементами заказа</returns>
         public static OrderDTO ToDTO(this Order order)
         {
             return new OrderDTO
@@ -198,6 +256,11 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Преобразует модель OrderItem в OrderItemDTO
+        /// </summary>
+        /// <param name="orderItem">Модель элемента заказа</param>
+        /// <returns>DTO элемента заказа с информацией о товаре</returns>
         public static OrderItemDTO ToDTO(this OrderItem orderItem)
         {
             return new OrderItemDTO
@@ -211,12 +274,15 @@ namespace cl_backend.Extensions
             };
         }
 
+        /// <summary>
+        /// Обновляет модель Order данными из OrderUpdateDTO
+        /// </summary>
+        /// <param name="order">Модель заказа для обновления</param>
+        /// <param name="dto">DTO с новым статусом заказа</param>
         public static void UpdateFromDTO(this Order order, OrderUpdateDTO dto)
         {
             order.Status = dto.Status;
             order.UpdatedAt = DateTime.UtcNow;
         }
-
-        #endregion
     }
 }

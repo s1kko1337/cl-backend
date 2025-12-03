@@ -10,12 +10,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OfficeOpenXml;
 
-// Устанавливаем лицензию для EPPlus (некоммерческое использование)
 ExcelPackage.License.SetNonCommercialPersonal("Non-Commercial Use");
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationContext>();
@@ -36,7 +33,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true
         };
     });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
     {
@@ -66,7 +63,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Автоматическое применение миграций и инициализация данных
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -79,7 +75,6 @@ using (var scope = app.Services.CreateScope())
         context.Database.Migrate();
         logger.LogInformation("Миграции успешно применены");
 
-        // Инициализация пользователей по умолчанию
         if (!context.Users.Any())
         {
             logger.LogInformation("Создание пользователей по умолчанию...");
@@ -110,7 +105,6 @@ using (var scope = app.Services.CreateScope())
             logger.LogInformation("Пользователи уже существуют, пропуск инициализации");
         }
 
-        // Заполнение базы данных моковыми данными
         logger.LogInformation("Проверка необходимости заполнения моковыми данными...");
         var seeder = new DataSeeder(context);
         seeder.SeedAllDataAsync().GetAwaiter().GetResult();
@@ -124,7 +118,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
 
