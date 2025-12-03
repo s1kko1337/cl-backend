@@ -8,6 +8,9 @@ using System.Globalization;
 
 namespace cl_backend.Controllers
 {
+    /// <summary>
+    /// Контроллер для экспорта отчетов в различные форматы
+    /// </summary>
     [Authorize(Roles = "admin")]
     [ApiController]
     [Route("api/admin/export")]
@@ -16,13 +19,21 @@ namespace cl_backend.Controllers
         private readonly ApplicationContext _context;
         private readonly IExportService _exportService;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера экспорта отчетов
+        /// </summary>
+        /// <param name="context">Контекст базы данных приложения</param>
+        /// <param name="exportService">Сервис для экспорта данных в разные форматы</param>
         public ReportsExportController(ApplicationContext context, IExportService exportService)
         {
             _context = context;
             _exportService = exportService;
         }
 
-        // GET: api/admin/export/products/csv - экспорт товаров в CSV
+        /// <summary>
+        /// Экспортирует список товаров в CSV файл
+        /// </summary>
+        /// <returns>CSV файл со списком товаров</returns>
         [HttpGet("products/csv")]
         public async Task<IActionResult> ExportProductsToCsv()
         {
@@ -44,7 +55,10 @@ namespace cl_backend.Controllers
             return File(csvData, "text/csv", $"products_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
-        // GET: api/admin/export/products/excel - экспорт товаров в Excel
+        /// <summary>
+        /// Экспортирует список товаров в Excel файл
+        /// </summary>
+        /// <returns>Excel файл со списком товаров</returns>
         [HttpGet("products/excel")]
         public async Task<IActionResult> ExportProductsToExcel()
         {
@@ -67,7 +81,12 @@ namespace cl_backend.Controllers
                 $"products_{DateTime.UtcNow:yyyyMMdd}.xlsx");
         }
 
-        // GET: api/admin/export/orders/csv - экспорт заказов в CSV
+        /// <summary>
+        /// Экспортирует список заказов в CSV файл за указанный период
+        /// </summary>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>CSV файл со списком заказов</returns>
         [HttpGet("orders/csv")]
         public async Task<IActionResult> ExportOrdersToCsv(
             [FromQuery] DateTime? from = null,
@@ -95,7 +114,12 @@ namespace cl_backend.Controllers
             return File(csvData, "text/csv", $"orders_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
-        // GET: api/admin/export/orders/excel - экспорт заказов в Excel
+        /// <summary>
+        /// Экспортирует список заказов в Excel файл за указанный период
+        /// </summary>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>Excel файл со списком заказов</returns>
         [HttpGet("orders/excel")]
         public async Task<IActionResult> ExportOrdersToExcel(
             [FromQuery] DateTime? from = null,
@@ -124,7 +148,12 @@ namespace cl_backend.Controllers
                 $"orders_{DateTime.UtcNow:yyyyMMdd}.xlsx");
         }
 
-        // GET: api/admin/export/sales-report/csv - экспорт отчета по продажам в CSV
+        /// <summary>
+        /// Экспортирует отчет по продажам в CSV файл за указанный период
+        /// </summary>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>CSV файл с отчетом по продажам</returns>
         [HttpGet("sales-report/csv")]
         public async Task<IActionResult> ExportSalesReportToCsv(
             [FromQuery] DateTime? from = null,
@@ -154,7 +183,12 @@ namespace cl_backend.Controllers
             return File(csvData, "text/csv", $"sales_report_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
-        // GET: api/admin/export/sales-report/excel - экспорт отчета по продажам в Excel
+        /// <summary>
+        /// Экспортирует отчет по продажам в Excel файл за указанный период
+        /// </summary>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>Excel файл с отчетом по продажам</returns>
         [HttpGet("sales-report/excel")]
         public async Task<IActionResult> ExportSalesReportToExcel(
             [FromQuery] DateTime? from = null,
@@ -185,7 +219,13 @@ namespace cl_backend.Controllers
                 $"sales_report_{DateTime.UtcNow:yyyyMMdd}.xlsx");
         }
 
-        // GET: api/admin/export/top-products/csv - экспорт топ товаров в CSV
+        /// <summary>
+        /// Экспортирует топ товаров в CSV файл за указанный период
+        /// </summary>
+        /// <param name="limit">Количество товаров в топе</param>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>CSV файл с топ товарами</returns>
         [HttpGet("top-products/csv")]
         public async Task<IActionResult> ExportTopProductsToCsv(
             [FromQuery] int limit = 10,
@@ -217,7 +257,13 @@ namespace cl_backend.Controllers
             return File(csvData, "text/csv", $"top_products_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
-        // GET: api/admin/export/top-products/excel - экспорт топ товаров в Excel
+        /// <summary>
+        /// Экспортирует топ товаров в Excel файл за указанный период
+        /// </summary>
+        /// <param name="limit">Количество товаров в топе</param>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>Excel файл с топ товарами</returns>
         [HttpGet("top-products/excel")]
         public async Task<IActionResult> ExportTopProductsToExcel(
             [FromQuery] int limit = 10,
@@ -250,7 +296,10 @@ namespace cl_backend.Controllers
                 $"top_products_{DateTime.UtcNow:yyyyMMdd}.xlsx");
         }
 
-        // GET: api/admin/export/inventory/csv - экспорт складских остатков в CSV
+        /// <summary>
+        /// Экспортирует складские остатки в CSV файл
+        /// </summary>
+        /// <returns>CSV файл со складскими остатками</returns>
         [HttpGet("inventory/csv")]
         public async Task<IActionResult> ExportInventoryToCsv()
         {
@@ -275,7 +324,10 @@ namespace cl_backend.Controllers
             return File(csvData, "text/csv", $"inventory_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
-        // GET: api/admin/export/inventory/excel - экспорт складских остатков в Excel
+        /// <summary>
+        /// Экспортирует складские остатки в Excel файл
+        /// </summary>
+        /// <returns>Excel файл со складскими остатками</returns>
         [HttpGet("inventory/excel")]
         public async Task<IActionResult> ExportInventoryToExcel()
         {

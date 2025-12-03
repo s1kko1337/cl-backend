@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet ef migrations:*)"
+      "Bash(Where-Object { $_ullName -notmatch '\\\\obj\\\\' -and $_ullName -notmatch '\\\\Migrations\\\\' })",
+      "Bash(Select-Object FullName)"
     ],
     "deny": [],
     "ask": []

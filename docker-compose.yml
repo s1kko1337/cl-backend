@@ -30,7 +30,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-cl_backend_db};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-210176}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-cl_backend_db};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-55451241}
     ports:
       - "${API_PORT:-5000}:8080"
     depends_on:

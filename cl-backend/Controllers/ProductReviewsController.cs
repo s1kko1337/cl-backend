@@ -1,4 +1,4 @@
-﻿using cl_backend.DbContexts;
+using cl_backend.DbContexts;
 using cl_backend.DTO;
 using cl_backend.Extensions;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +8,9 @@ using System.Security.Claims;
 
 namespace cl_backend.Controllers
 {
+    /// <summary>
+    /// Контроллер для управления отзывами на товары
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/products/{productId}/reviews")]
@@ -18,13 +21,22 @@ namespace cl_backend.Controllers
         private const long MaxFileSize = 12 * 1024 * 1024;
         private readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера отзывов
+        /// </summary>
+        /// <param name="context">Контекст базы данных приложения</param>
+        /// <param name="env">Окружение веб-хоста для работы с файловой системой</param>
         public ProductReviewsController(ApplicationContext context, IWebHostEnvironment env)
         {
             _context = context;
             _env = env;
         }
 
-        // GET: api/products/5/reviews - получить все отзывы товара
+        /// <summary>
+        /// Получает все отзывы товара
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <returns>Коллекция DTO отзывов товара</returns>
         [HttpGet]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<ProductReviewDTO>>> GetProductReviews(int productId)
@@ -42,7 +54,12 @@ namespace cl_backend.Controllers
             return Ok(reviews.Select(r => r.ToDTO()));
         }
 
-        // GET: api/products/5/reviews/10 - получить отзыв по ID
+        /// <summary>
+        /// Получает отзыв по идентификатору
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор отзыва</param>
+        /// <returns>DTO отзыва</returns>
         [HttpGet("{id}")]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<ProductReviewDTO>> GetProductReview(int productId, int id)
@@ -64,7 +81,12 @@ namespace cl_backend.Controllers
             return review.ToDTO();
         }
 
-        // GET: api/products/5/reviews/10/image - получить информацию об изображении отзыва
+        /// <summary>
+        /// Получает информацию об изображении отзыва
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор отзыва</param>
+        /// <returns>Информация об изображении отзыва</returns>
         [HttpGet("{id}/image")]
         [AllowAnonymous]
         public async Task<ActionResult<object>> GetReviewImage(int productId, int id)
@@ -96,7 +118,12 @@ namespace cl_backend.Controllers
             });
         }
 
-        // GET: api/products/5/reviews/10/image/download - скачать изображение отзыва
+        /// <summary>
+        /// Скачивает изображение отзыва
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор отзыва</param>
+        /// <returns>Файл изображения</returns>
         [HttpGet("{id}/image/download")]
         [AllowAnonymous]
         public async Task<IActionResult> DownloadReviewImage(int productId, int id)
@@ -141,7 +168,12 @@ namespace cl_backend.Controllers
             }
         }
 
-        // POST: api/products/5/reviews - добавить отзыв товара
+        /// <summary>
+        /// Создает новый отзыв на товар
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="reviewDto">DTO с данными отзыва</param>
+        /// <returns>Созданный отзыв в виде DTO</returns>
         [HttpPost]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<ProductReviewDTO>> CreateProductReview(int productId, ProductReviewCreateDTO reviewDto)
@@ -164,7 +196,13 @@ namespace cl_backend.Controllers
             return CreatedAtAction(nameof(GetProductReview), new { productId = productId, id = review.Id }, review.ToDTO());
         }
 
-        // POST: api/products/5/reviews/10/image - загрузить изображение для отзыва
+        /// <summary>
+        /// Загружает изображение для отзыва
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор отзыва</param>
+        /// <param name="file">Файл изображения для загрузки</param>
+        /// <returns>Информация о загруженном изображении</returns>
         [HttpPost("{id}/image")]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<object>> UploadReviewImage(int productId, int id, IFormFile file)
@@ -203,7 +241,6 @@ namespace cl_backend.Controllers
             {
                 int userId = review.AuthorId;
 
-                // /uploads/user-{userId}/review-{reviewId}/
                 var uploadsDirectory = Path.Combine(_env.ContentRootPath, "uploads", $"user-{userId}", $"review-{id}");
                 if (!Directory.Exists(uploadsDirectory))
                 {
@@ -240,8 +277,13 @@ namespace cl_backend.Controllers
             }
         }
 
-
-        // PUT: api/products/5/reviews/10 - обновить отзыв товара
+        /// <summary>
+        /// Обновляет данные отзыва
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор отзыва</param>
+        /// <param name="reviewDto">DTO с обновленными данными отзыва</param>
+        /// <returns>Результат операции обновления</returns>
         [HttpPut("{id}")]
         [Authorize(Roles = "admin, user")]
         public async Task<IActionResult> UpdateProductReview(int productId, int id, ProductReviewUpdateDTO reviewDto)
@@ -286,7 +328,12 @@ namespace cl_backend.Controllers
             return Ok();
         }
 
-        // DELETE: api/products/5/reviews/10 - удалить отзыв товара
+        /// <summary>
+        /// Удаляет отзыв товара
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор отзыва</param>
+        /// <returns>Результат операции удаления</returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "admin, user")]
         public async Task<IActionResult> DeleteProductReview(int productId, int id)
@@ -307,7 +354,6 @@ namespace cl_backend.Controllers
 
             try
             {
-                // Удаление файла с диска если существует
                 if (!string.IsNullOrEmpty(review.ReviewImageUrl))
                 {
                     var filePath = Path.Combine(_env.ContentRootPath, review.ReviewImageUrl.TrimStart('/'));
@@ -316,7 +362,6 @@ namespace cl_backend.Controllers
                         System.IO.File.Delete(filePath);
                     }
 
-                    // Попытка удалить пустые папки
                     var dirPath = Path.GetDirectoryName(filePath);
                     if (dirPath != null && Directory.Exists(dirPath) && Directory.GetFiles(dirPath).Length == 0)
                     {
@@ -335,7 +380,12 @@ namespace cl_backend.Controllers
             }
         }
 
-        // DELETE: api/products/5/reviews/10/image - удалить изображение отзыва
+        /// <summary>
+        /// Удаляет изображение отзыва
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор отзыва</param>
+        /// <returns>Результат операции удаления</returns>
         [HttpDelete("{id}/image")]
         [Authorize(Roles = "admin, user")]
         public async Task<IActionResult> DeleteReviewImage(int productId, int id)
@@ -379,11 +429,21 @@ namespace cl_backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Проверяет существование отзыва по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор отзыва</param>
+        /// <returns>True если отзыв существует, иначе False</returns>
         private bool ProductReviewExists(int id)
         {
             return _context.ProductReviews.Any(e => e.Id == id);
         }
 
+        /// <summary>
+        /// Определяет MIME тип файла по его расширению
+        /// </summary>
+        /// <param name="filePath">Путь к файлу</param>
+        /// <returns>MIME тип контента</returns>
         private string GetContentType(string filePath)
         {
             var extension = Path.GetExtension(filePath).ToLower();

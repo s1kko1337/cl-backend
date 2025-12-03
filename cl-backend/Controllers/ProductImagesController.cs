@@ -9,6 +9,9 @@ using System.IO.Compression;
 
 namespace cl_backend.Controllers
 {
+    /// <summary>
+    /// Контроллер для управления изображениями товаров
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/products/{productId}/images")]
@@ -16,16 +19,25 @@ namespace cl_backend.Controllers
     {
         private readonly ApplicationContext _context;
         private readonly IWebHostEnvironment _env;
-        private const long MaxFileSize = 12 * 1024 * 1024; // 12MB
+        private const long MaxFileSize = 12 * 1024 * 1024;
         private readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера изображений товаров
+        /// </summary>
+        /// <param name="context">Контекст базы данных приложения</param>
+        /// <param name="env">Окружение веб-хоста для работы с файловой системой</param>
         public ProductImagesController(ApplicationContext context, IWebHostEnvironment env)
         {
             _context = context;
             _env = env;
         }
 
-        // GET: api/products/5/images - получить все изображения товара
+        /// <summary>
+        /// Получает все изображения товара
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <returns>Коллекция DTO изображений товара</returns>
         [HttpGet]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<ProductImageDTO>>> GetProductImages(int productId)
@@ -43,7 +55,12 @@ namespace cl_backend.Controllers
             return Ok(images.Select(i => i.ToDTO()));
         }
 
-        // GET: api/products/5/images/10 - получить изображение по ID
+        /// <summary>
+        /// Получает изображение товара по идентификатору
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор изображения</param>
+        /// <returns>DTO изображения товара</returns>
         [HttpGet("{id}")]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<ProductImageDTO>> GetProductImage(int productId, int id)
@@ -65,7 +82,12 @@ namespace cl_backend.Controllers
             return image.ToDTO();
         }
 
-        // GET: api/products/5/images/10/download - скачать конкретное изображение товара
+        /// <summary>
+        /// Скачивает файл изображения товара
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор изображения</param>
+        /// <returns>Файл изображения</returns>
         [HttpGet("{id}/download")]
         [AllowAnonymous]
         public async Task<IActionResult> DownloadProductImage(int productId, int id)
@@ -106,7 +128,11 @@ namespace cl_backend.Controllers
             }
         }
 
-        // GET: api/products/5/images/download-all - скачать все изображения товара как ZIP архив
+        /// <summary>
+        /// Скачивает все изображения товара в виде ZIP архива
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <returns>ZIP архив с изображениями товара</returns>
         [HttpGet("download-all")]
         [AllowAnonymous]
         public async Task<IActionResult> DownloadAllProductImages(int productId)
@@ -131,7 +157,6 @@ namespace cl_backend.Controllers
                 var uploadsDirectory = Path.Combine(_env.ContentRootPath, "uploads", $"product-{productId}-images");
                 var tempZipPath = Path.Combine(Path.GetTempPath(), $"product-{productId}-images-{Guid.NewGuid()}.zip");
 
-                // Создание ZIP архива
                 using (var zipArchive = System.IO.Compression.ZipFile.Open(tempZipPath, System.IO.Compression.ZipArchiveMode.Create))
                 {
                     foreach (var image in images)
@@ -148,7 +173,6 @@ namespace cl_backend.Controllers
 
                 var zipBytes = await System.IO.File.ReadAllBytesAsync(tempZipPath);
 
-                // Удаление временного файла
                 System.IO.File.Delete(tempZipPath);
 
                 return File(zipBytes, "application/zip", $"product-{productId}-images.zip");
@@ -159,7 +183,11 @@ namespace cl_backend.Controllers
             }
         }
 
-        // GET: api/products/5/images/info - получить информацию о всех изображениях товара (URL + описание)
+        /// <summary>
+        /// Получает информацию о всех изображениях товара с полными URL
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <returns>Коллекция DTO изображений с полными URL адресами</returns>
         [HttpGet("info")]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<ProductImageDTO>>> GetProductImagesInfo(int productId)
@@ -182,7 +210,12 @@ namespace cl_backend.Controllers
             }));
         }
 
-        // GET: api/products/5/images/10/info - получить информацию о конкретном изображении (URL + описание)
+        /// <summary>
+        /// Получает информацию о конкретном изображении товара с полным URL
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор изображения</param>
+        /// <returns>DTO изображения с полным URL адресом</returns>
         [HttpGet("{id}/info")]
         [AllowAnonymous]
         public async Task<ActionResult<ProductImageDTO>> GetProductImageInfo(int productId, int id)
@@ -209,7 +242,13 @@ namespace cl_backend.Controllers
             });
         }
 
-        // POST: api/products/5/images - загрузить изображение товара
+        /// <summary>
+        /// Загружает новое изображение для товара
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="file">Файл изображения для загрузки</param>
+        /// <param name="altText">Альтернативный текст для изображения</param>
+        /// <returns>Созданное изображение в виде DTO</returns>
         [HttpPost]
         [Authorize(Roles = "admin")]
         public async Task<ActionResult<ProductImageDTO>> UploadProductImage(int productId, IFormFile file, [FromForm] string? altText)
@@ -238,27 +277,22 @@ namespace cl_backend.Controllers
 
             try
             {
-                // Создание папки для товара
                 var uploadsDirectory = Path.Combine(_env.ContentRootPath, "uploads", $"product-{productId}-images");
                 if (!Directory.Exists(uploadsDirectory))
                 {
                     Directory.CreateDirectory(uploadsDirectory);
                 }
 
-                // Генерирование уникального имени файла
                 var fileName = $"{Guid.NewGuid()}{fileExtension}";
                 var filePath = Path.Combine(uploadsDirectory, fileName);
 
-                // Сохранение файла
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
 
-                // Формирование URL изображения
                 var imageUrl = $"/uploads/product-{productId}-images/{fileName}";
 
-                // Создание записи в БД
                 var image = new ProductImage
                 {
                     ImageUrl = imageUrl,
@@ -277,7 +311,13 @@ namespace cl_backend.Controllers
             }
         }
 
-        // PUT: api/products/5/images/10 - обновить данные изображения (только altText)
+        /// <summary>
+        /// Обновляет метаданные изображения товара
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор изображения</param>
+        /// <param name="imageDto">DTO с обновленными данными изображения</param>
+        /// <returns>Результат операции обновления</returns>
         [HttpPut("{id}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateProductImage(int productId, int id, [FromBody] ProductImageUpdateDTO imageDto)
@@ -322,7 +362,12 @@ namespace cl_backend.Controllers
             return Ok();
         }
 
-        // DELETE: api/products/5/images/10 - удалить изображение товара
+        /// <summary>
+        /// Удаляет изображение товара
+        /// </summary>
+        /// <param name="productId">Идентификатор товара</param>
+        /// <param name="id">Идентификатор изображения</param>
+        /// <returns>Результат операции удаления</returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteProductImage(int productId, int id)
@@ -343,7 +388,6 @@ namespace cl_backend.Controllers
 
             try
             {
-                // Удаление файла с диска
                 var uploadsDirectory = Path.Combine(_env.ContentRootPath, "uploads", $"product-{productId}-images");
                 var fileName = Path.GetFileName(image.ImageUrl);
                 var filePath = Path.Combine(uploadsDirectory, fileName);
@@ -353,7 +397,6 @@ namespace cl_backend.Controllers
                     System.IO.File.Delete(filePath);
                 }
 
-                // Удаление записи из БД
                 _context.ProductImages.Remove(image);
                 await _context.SaveChangesAsync();
 
@@ -365,11 +408,21 @@ namespace cl_backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Проверяет существование изображения по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор изображения</param>
+        /// <returns>True если изображение существует, иначе False</returns>
         private bool ProductImageExists(int id)
         {
             return _context.ProductImages.Any(e => e.Id == id);
         }
 
+        /// <summary>
+        /// Определяет MIME тип файла по его расширению
+        /// </summary>
+        /// <param name="filePath">Путь к файлу</param>
+        /// <returns>MIME тип контента</returns>
         private string GetContentType(string filePath)
         {
             var extension = Path.GetExtension(filePath).ToLower();

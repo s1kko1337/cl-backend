@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace cl_backend.Controllers
 {
+    /// <summary>
+    /// Контроллер для управления категориями товаров
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/categories")]
@@ -14,12 +17,19 @@ namespace cl_backend.Controllers
     {
         private readonly ApplicationContext _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера категорий
+        /// </summary>
+        /// <param name="context">Контекст базы данных приложения</param>
         public CategoriesController(ApplicationContext context)
         {
             _context = context;
         }
 
-        // GET: api/categories - получить все категории с продуктами
+        /// <summary>
+        /// Получает список всех категорий с продуктами
+        /// </summary>
+        /// <returns>Коллекция DTO категорий включая продукты с изображениями и отзывами</returns>
         [HttpGet]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategories()
@@ -34,7 +44,11 @@ namespace cl_backend.Controllers
             return Ok(categories.Select(c => c.ToDTO()));
         }
 
-        // GET: api/categories/5 - получить категорию по ID с продуктами
+        /// <summary>
+        /// Получает категорию по идентификатору с продуктами
+        /// </summary>
+        /// <param name="id">Идентификатор категории</param>
+        /// <returns>DTO категории с полной информацией о продуктах</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<CategoryDTO>> GetCategory(int id)
         {
@@ -53,7 +67,11 @@ namespace cl_backend.Controllers
             return category.ToDTO();
         }
 
-        // GET: api/categories/5/products - получить товары по категории
+        /// <summary>
+        /// Получает все товары категории
+        /// </summary>
+        /// <param name="id">Идентификатор категории</param>
+        /// <returns>Коллекция DTO товаров категории</returns>
         [Authorize(Roles = "admin, user")]
         [HttpGet("{id}/products")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductsByCategory(int id)
@@ -73,7 +91,11 @@ namespace cl_backend.Controllers
             return Ok(category.Products.Select(p => p.ToDTO()));
         }
 
-        // POST: api/categories - создать новую категорию
+        /// <summary>
+        /// Создает новую категорию
+        /// </summary>
+        /// <param name="categoryDto">DTO с данными для создания категории</param>
+        /// <returns>Созданная категория в виде DTO</returns>
         [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<ActionResult<CategoryDTO>> CreateCategory(CategoryCreateDTO categoryDto)
@@ -94,7 +116,12 @@ namespace cl_backend.Controllers
             return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, createdCategory?.ToDTO());
         }
 
-        // PUT: api/categories/5 - обновить категорию
+        /// <summary>
+        /// Обновляет данные категории
+        /// </summary>
+        /// <param name="id">Идентификатор категории</param>
+        /// <param name="categoryDto">DTO с обновленными данными категории</param>
+        /// <returns>Результат операции обновления</returns>
         [Authorize(Roles = "admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategory(int id, CategoryUpdateDTO categoryDto)
@@ -131,7 +158,11 @@ namespace cl_backend.Controllers
             return Ok();
         }
 
-        // DELETE: api/categories/5 - удалить категорию
+        /// <summary>
+        /// Удаляет категорию по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор категории</param>
+        /// <returns>Результат операции удаления</returns>
         [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
@@ -145,7 +176,6 @@ namespace cl_backend.Controllers
                 return NotFound();
             }
 
-            // Проверяем, есть ли связанные продукты
             if (category.Products.Any())
             {
                 return BadRequest("Cannot delete category with existing products. Remove products first.");
@@ -157,6 +187,11 @@ namespace cl_backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Проверяет существование категории по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор категории</param>
+        /// <returns>True если категория существует, иначе False</returns>
         private bool CategoryExists(int id)
         {
             return _context.Categories.Any(e => e.Id == id);

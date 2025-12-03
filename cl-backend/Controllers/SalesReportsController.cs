@@ -7,6 +7,9 @@ using System.Globalization;
 
 namespace cl_backend.Controllers
 {
+    /// <summary>
+    /// Контроллер для генерации отчетов по продажам и аналитики
+    /// </summary>
     [Authorize(Roles = "admin")]
     [ApiController]
     [Route("api/admin/reports")]
@@ -14,12 +17,20 @@ namespace cl_backend.Controllers
     {
         private readonly ApplicationContext _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера отчетов о продажах
+        /// </summary>
+        /// <param name="context">Контекст базы данных приложения</param>
         public SalesReportsController(ApplicationContext context)
         {
             _context = context;
         }
 
-        // GET: api/admin/reports/sales/daily - дневная статистика продаж
+        /// <summary>
+        /// Получает дневную статистику продаж за указанный период
+        /// </summary>
+        /// <param name="days">Количество дней для анализа (по умолчанию 30)</param>
+        /// <returns>Коллекция дневной статистики продаж</returns>
         [HttpGet("sales/daily")]
         public async Task<ActionResult<IEnumerable<DailySalesReportDTO>>> GetDailySales(
             [FromQuery] int days = 30)
@@ -44,7 +55,12 @@ namespace cl_backend.Controllers
             return Ok(dailySales);
         }
 
-        // GET: api/admin/reports/sales/period - отчет за период
+        /// <summary>
+        /// Получает отчет о продажах за указанный период
+        /// </summary>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>Детальный отчет о продажах за период</returns>
         [HttpGet("sales/period")]
         public async Task<ActionResult<PeriodSalesReportDTO>> GetPeriodSales(
             [FromQuery] DateTime? from = null,
@@ -85,7 +101,11 @@ namespace cl_backend.Controllers
             return Ok(report);
         }
 
-        // GET: api/admin/reports/revenue/monthly - помесячная выручка
+        /// <summary>
+        /// Получает помесячную выручку за указанное количество месяцев
+        /// </summary>
+        /// <param name="months">Количество месяцев для анализа (по умолчанию 12)</param>
+        /// <returns>Коллекция помесячной статистики выручки</returns>
         [HttpGet("revenue/monthly")]
         public async Task<ActionResult<IEnumerable<MonthlyRevenueDTO>>> GetMonthlyRevenue(
             [FromQuery] int months = 12)
@@ -115,7 +135,13 @@ namespace cl_backend.Controllers
             return Ok(grouped);
         }
 
-        // GET: api/admin/reports/top-products - топ продаваемых товаров
+        /// <summary>
+        /// Получает список топ продаваемых товаров за период
+        /// </summary>
+        /// <param name="limit">Количество товаров в топе (по умолчанию 10)</param>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>Коллекция топ товаров с статистикой продаж</returns>
         [HttpGet("top-products")]
         public async Task<ActionResult<IEnumerable<TopProductDTO>>> GetTopProducts(
             [FromQuery] int limit = 10,
@@ -143,7 +169,6 @@ namespace cl_backend.Controllers
                 .Take(limit)
                 .ToListAsync();
 
-            // Получаем SKU для каждого товара
             var productIds = topProducts.Select(p => p.ProductId).ToList();
             var products = await _context.Products
                 .Where(p => productIds.Contains(p.Id))
@@ -162,7 +187,12 @@ namespace cl_backend.Controllers
             return Ok(result);
         }
 
-        // GET: api/admin/reports/sales-by-category - продажи по категориям
+        /// <summary>
+        /// Получает статистику продаж по категориям товаров за период
+        /// </summary>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>Коллекция статистики продаж по категориям</returns>
         [HttpGet("sales-by-category")]
         public async Task<ActionResult<IEnumerable<CategorySalesDTO>>> GetSalesByCategory(
             [FromQuery] DateTime? from = null,
@@ -212,7 +242,12 @@ namespace cl_backend.Controllers
             return Ok(result);
         }
 
-        // GET: api/admin/reports/payment-methods - распределение по способам оплаты
+        /// <summary>
+        /// Получает распределение заказов по способам оплаты за период
+        /// </summary>
+        /// <param name="from">Начальная дата периода</param>
+        /// <param name="to">Конечная дата периода</param>
+        /// <returns>Коллекция статистики по способам оплаты</returns>
         [HttpGet("payment-methods")]
         public async Task<ActionResult<IEnumerable<PaymentMethodStatsDTO>>> GetPaymentMethodStats(
             [FromQuery] DateTime? from = null,
@@ -244,7 +279,10 @@ namespace cl_backend.Controllers
             return Ok(paymentStats);
         }
 
-        // GET: api/admin/reports/dashboard - общая статистика для dashboard
+        /// <summary>
+        /// Получает сводную статистику для дашборда администратора
+        /// </summary>
+        /// <returns>Сводные данные с общей статистикой и KPI</returns>
         [HttpGet("dashboard")]
         public async Task<ActionResult<DashboardSummaryDTO>> GetDashboard()
         {
@@ -253,33 +291,27 @@ namespace cl_backend.Controllers
             var weekStart = now.Date.AddDays(-7);
             var monthStart = now.Date.AddMonths(-1);
 
-            // Получаем все заказы (кроме отмененных) для расчетов
             var allOrders = await _context.Orders
                 .Where(o => o.Status != "Cancelled")
                 .Include(o => o.OrderItems)
                 .ToListAsync();
 
-            // Заказы по периодам
             var todayOrders = allOrders.Where(o => o.CreatedAt >= todayStart).ToList();
             var weekOrders = allOrders.Where(o => o.CreatedAt >= weekStart).ToList();
             var monthOrders = allOrders.Where(o => o.CreatedAt >= monthStart).ToList();
 
-            // Общая статистика
             var totalProducts = await _context.Products.CountAsync();
             var totalCategories = await _context.Categories.CountAsync();
             var totalUsers = await _context.Users.CountAsync();
 
-            // Товары с низким остатком
             var lowStockProducts = await _context.Products.CountAsync(p => p.StockQuantity > 0 && p.StockQuantity <= 10);
             var outOfStockProducts = await _context.Products.CountAsync(p => p.StockQuantity == 0);
 
-            // Заказы по статусам
             var ordersByStatus = await _context.Orders
                 .GroupBy(o => o.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.Status, x => x.Count);
 
-            // Последние 5 заказов
             var recentOrders = await _context.Orders
                 .OrderByDescending(o => o.CreatedAt)
                 .Take(5)
@@ -295,48 +327,43 @@ namespace cl_backend.Controllers
 
             var dashboard = new DashboardSummaryDTO
             {
-                // Общая статистика
                 TotalOrders = allOrders.Count,
                 TotalProducts = totalProducts,
                 TotalCategories = totalCategories,
                 TotalUsers = totalUsers,
                 TotalRevenue = allOrders.Sum(o => o.TotalAmount),
 
-                // Сегодня
                 TodayOrders = todayOrders.Count,
                 TodayRevenue = todayOrders.Sum(o => o.TotalAmount),
 
-                // Неделя
                 WeekOrders = weekOrders.Count,
                 WeekRevenue = weekOrders.Sum(o => o.TotalAmount),
 
-                // Месяц
                 MonthOrders = monthOrders.Count,
                 MonthRevenue = monthOrders.Sum(o => o.TotalAmount),
 
-                // KPI
                 AverageOrderValue = allOrders.Any() ? allOrders.Average(o => o.TotalAmount) : 0,
                 LowStockProductsCount = lowStockProducts,
                 OutOfStockProductsCount = outOfStockProducts,
                 PendingOrdersCount = ordersByStatus.ContainsKey("Pending") ? ordersByStatus["Pending"] : 0,
 
-                // Статусы заказов
                 OrdersByStatus = ordersByStatus,
 
-                // Последние заказы
                 RecentOrders = recentOrders
             };
 
             return Ok(dashboard);
         }
 
-        // GET: api/admin/reports/alerts - алерты для dashboard
+        /// <summary>
+        /// Получает список алертов для дашборда о критических состояниях
+        /// </summary>
+        /// <returns>Коллекция алертов с типом и количеством</returns>
         [HttpGet("alerts")]
         public async Task<ActionResult<IEnumerable<DashboardAlertDTO>>> GetAlerts()
         {
             var alerts = new List<DashboardAlertDTO>();
 
-            // Проверяем товары с низким остатком
             var lowStockCount = await _context.Products.CountAsync(p => p.StockQuantity > 0 && p.StockQuantity <= 10);
             if (lowStockCount > 0)
             {
@@ -348,7 +375,6 @@ namespace cl_backend.Controllers
                 });
             }
 
-            // Проверяем товары, закончившиеся на складе
             var outOfStockCount = await _context.Products.CountAsync(p => p.StockQuantity == 0);
             if (outOfStockCount > 0)
             {
@@ -360,7 +386,6 @@ namespace cl_backend.Controllers
                 });
             }
 
-            // Проверяем необработанные заказы
             var pendingOrdersCount = await _context.Orders.CountAsync(o => o.Status == "Pending");
             if (pendingOrdersCount > 0)
             {

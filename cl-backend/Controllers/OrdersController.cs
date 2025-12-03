@@ -1,4 +1,4 @@
-﻿using cl_backend.DbContexts;
+using cl_backend.DbContexts;
 using cl_backend.DTO;
 using cl_backend.Extensions;
 using cl_backend.Models.Sales;
@@ -9,6 +9,9 @@ using System.Security.Claims;
 
 namespace cl_backend.Controllers
 {
+    /// <summary>
+    /// Контроллер для управления заказами
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/orders")]
@@ -16,12 +19,19 @@ namespace cl_backend.Controllers
     {
         private readonly ApplicationContext _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера заказов
+        /// </summary>
+        /// <param name="context">Контекст базы данных приложения</param>
         public OrdersController(ApplicationContext context)
         {
             _context = context;
         }
 
-        // GET: api/orders - получить все заказы (admin) или свои заказы (user)
+        /// <summary>
+        /// Получает список заказов: все заказы для админа или только свои для пользователя
+        /// </summary>
+        /// <returns>Коллекция DTO заказов</returns>
         [HttpGet]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrders()
@@ -32,7 +42,6 @@ namespace cl_backend.Controllers
             IQueryable<Order> query = _context.Orders
                 .Include(o => o.OrderItems);
 
-            // Если пользователь не admin, показываем только его заказы
             if (userRole != "admin")
             {
                 query = query.Where(o => o.UserId == userId);
@@ -45,7 +54,11 @@ namespace cl_backend.Controllers
             return Ok(orders.Select(o => o.ToDTO()));
         }
 
-        // GET: api/orders/5 - получить конкретный заказ
+        /// <summary>
+        /// Получает заказ по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор заказа</param>
+        /// <returns>DTO заказа</returns>
         [HttpGet("{id}")]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<OrderDTO>> GetOrder(int id)
@@ -62,7 +75,6 @@ namespace cl_backend.Controllers
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-            // Проверяем права доступа
             if (userRole != "admin" && order.UserId != userId)
             {
                 return Forbid();
@@ -71,7 +83,11 @@ namespace cl_backend.Controllers
             return order.ToDTO();
         }
 
-        // GET: api/orders/user/5 - получить все заказы конкретного пользователя (только admin)
+        /// <summary>
+        /// Получает все заказы конкретного пользователя
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <returns>Коллекция DTO заказов пользователя</returns>
         [HttpGet("user/{userId}")]
         [Authorize(Roles = "admin")]
         public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrdersByUser(int userId)
@@ -85,7 +101,11 @@ namespace cl_backend.Controllers
             return Ok(orders.Select(o => o.ToDTO()));
         }
 
-        // POST: api/orders - создать новый заказ
+        /// <summary>
+        /// Создает новый заказ
+        /// </summary>
+        /// <param name="orderDto">DTO с данными для создания заказа</param>
+        /// <returns>Созданный заказ в виде DTO</returns>
         [HttpPost]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<OrderDTO>> CreateOrder(OrderCreateDTO orderDto)
@@ -113,7 +133,6 @@ namespace cl_backend.Controllers
 
                 decimal totalAmount = 0;
 
-                // Обрабатываем каждый товар в заказе
                 foreach (var itemDto in orderDto.OrderItems)
                 {
                     var product = await _context.Products.FindAsync(itemDto.ProductId);
@@ -123,16 +142,13 @@ namespace cl_backend.Controllers
                         return BadRequest($"Product with ID {itemDto.ProductId} not found.");
                     }
 
-                    // Проверяем наличие товара
                     if (product.StockQuantity < itemDto.Quantity)
                     {
                         return BadRequest($"Insufficient stock for product '{product.Name}'. Available: {product.StockQuantity}, Requested: {itemDto.Quantity}");
                     }
 
-                    // Уменьшаем количество товара на складе
                     product.StockQuantity -= itemDto.Quantity;
 
-                    // Создаем элемент заказа
                     var orderItem = new OrderItem
                     {
                         ProductId = product.Id,
@@ -165,7 +181,12 @@ namespace cl_backend.Controllers
             }
         }
 
-        // PUT: api/orders/5 - обновить статус заказа (только admin)
+        /// <summary>
+        /// Обновляет статус заказа
+        /// </summary>
+        /// <param name="id">Идентификатор заказа</param>
+        /// <param name="orderDto">DTO с обновленным статусом заказа</param>
+        /// <returns>Результат операции обновления</returns>
         [HttpPut("{id}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateOrder(int id, OrderUpdateDTO orderDto)
@@ -202,7 +223,11 @@ namespace cl_backend.Controllers
             return Ok();
         }
 
-        // DELETE: api/orders/5 - удалить заказ
+        /// <summary>
+        /// Удаляет заказ с возвратом товаров на склад
+        /// </summary>
+        /// <param name="id">Идентификатор заказа</param>
+        /// <returns>Результат операции удаления</returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "admin, user")]
         public async Task<IActionResult> DeleteOrder(int id)
@@ -219,7 +244,6 @@ namespace cl_backend.Controllers
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-            // Проверяем права доступа
             if (userRole != "admin" && order.UserId != userId)
             {
                 return Forbid();
@@ -228,7 +252,6 @@ namespace cl_backend.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Возвращаем товары на склад
                 foreach (var orderItem in order.OrderItems)
                 {
                     var product = await _context.Products.FindAsync(orderItem.ProductId);
@@ -251,6 +274,11 @@ namespace cl_backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Проверяет существование заказа по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор заказа</param>
+        /// <returns>True если заказ существует, иначе False</returns>
         private bool OrderExists(int id)
         {
             return _context.Orders.Any(e => e.Id == id);

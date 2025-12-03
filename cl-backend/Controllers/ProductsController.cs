@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace cl_backend.Controllers
 {
+    /// <summary>
+    /// Контроллер для управления товарами
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/products")]
@@ -14,12 +17,19 @@ namespace cl_backend.Controllers
     {
         private readonly ApplicationContext _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера товаров
+        /// </summary>
+        /// <param name="context">Контекст базы данных приложения</param>
         public ProductsController(ApplicationContext context)
         {
             _context = context;
         }
 
-        // GET: api/products - получить все товары
+        /// <summary>
+        /// Получает список всех товаров с полной информацией
+        /// </summary>
+        /// <returns>Коллекция DTO товаров включая категории, изображения и отзывы</returns>
         [HttpGet]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProducts()
@@ -33,7 +43,11 @@ namespace cl_backend.Controllers
             return Ok(products.Select(p => p.ToDTO()));
         }
 
-        // GET: api/products/5 - получить товар по ID
+        /// <summary>
+        /// Получает товар по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор товара</param>
+        /// <returns>DTO товара с полной информацией включая категорию, изображения и отзывы</returns>
         [HttpGet("{id}")]
         [Authorize(Roles = "admin, user")]
         public async Task<ActionResult<ProductDTO>> GetProduct(int id)
@@ -52,7 +66,11 @@ namespace cl_backend.Controllers
             return product.ToDTO();
         }
 
-        // POST: api/products - создать новый товар
+        /// <summary>
+        /// Создает новый товар
+        /// </summary>
+        /// <param name="productDto">DTO с данными для создания товара</param>
+        /// <returns>Созданный товар в виде DTO</returns>
         [HttpPost]
         [Authorize(Roles = "admin")]
         public async Task<ActionResult<ProductDTO>> CreateProduct(ProductCreateDTO productDto)
@@ -62,14 +80,12 @@ namespace cl_backend.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Проверяем, существует ли категория
             var categoryExists = await _context.Categories.AnyAsync(c => c.Id == productDto.CategoryId);
             if (!categoryExists)
             {
                 return BadRequest("Category does not exist.");
             }
 
-            // Проверяем уникальность SKU
             var skuExists = await _context.Products.AnyAsync(p => p.SKU == productDto.SKU);
             if (skuExists)
             {
@@ -89,7 +105,12 @@ namespace cl_backend.Controllers
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, createdProduct?.ToDTO());
         }
 
-        // PUT: api/products/5 - обновить товар
+        /// <summary>
+        /// Обновляет данные товара
+        /// </summary>
+        /// <param name="id">Идентификатор товара</param>
+        /// <param name="productDto">DTO с обновленными данными товара</param>
+        /// <returns>Результат операции обновления</returns>
         [HttpPut("{id}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateProduct(int id, ProductUpdateDTO productDto)
@@ -105,14 +126,12 @@ namespace cl_backend.Controllers
                 return NotFound();
             }
 
-            // Проверяем, существует ли категория
             var categoryExists = await _context.Categories.AnyAsync(c => c.Id == productDto.CategoryId);
             if (!categoryExists)
             {
                 return BadRequest("Category does not exist.");
             }
 
-            // Проверяем уникальность SKU (если SKU изменился)
             if (product.SKU != productDto.SKU)
             {
                 var skuExists = await _context.Products.AnyAsync(p => p.SKU == productDto.SKU && p.Id != id);
@@ -143,7 +162,11 @@ namespace cl_backend.Controllers
             return Ok();
         }
 
-        // DELETE: api/products/5 - удалить товар
+        /// <summary>
+        /// Удаляет товар по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор товара</param>
+        /// <returns>Результат операции удаления</returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteProduct(int id)
@@ -158,13 +181,11 @@ namespace cl_backend.Controllers
                 return NotFound();
             }
 
-            // Проверяем, есть ли отзывы
             if (product.Reviews.Any())
             {
                 return BadRequest("Cannot delete product with existing reviews. Remove reviews first.");
             }
 
-            // Проверяем, есть ли изображения
             if (product.Images.Any())
             {
                 return BadRequest("Cannot delete product with existing images. Remove images first.");
@@ -176,6 +197,11 @@ namespace cl_backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Проверяет существование товара по идентификатору
+        /// </summary>
+        /// <param name="id">Идентификатор товара</param>
+        /// <returns>True если товар существует, иначе False</returns>
         private bool ProductExists(int id)
         {
             return _context.Products.Any(e => e.Id == id);

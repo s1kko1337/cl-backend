@@ -10,16 +10,28 @@ using System.Security.Claims;
 
 namespace cl_backend.Controllers
 {
+    /// <summary>
+    /// Контроллер для аутентификации и управления пользователями
+    /// </summary>
     [ApiController]
     public class AuthController : Controller
     {
         private readonly ApplicationContext _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера аутентификации
+        /// </summary>
+        /// <param name="context">Контекст базы данных приложения</param>
         public AuthController(ApplicationContext context)
         {
             _context = context;
         }
 
+        /// <summary>
+        /// Регистрирует нового пользователя в системе
+        /// </summary>
+        /// <param name="request">Данные для регистрации пользователя</param>
+        /// <returns>Ответ с результатом регистрации и данными пользователя</returns>
         [HttpPost("/register")]
         public IActionResult Register([FromBody] RegisterRequest request)
         {
@@ -62,6 +74,11 @@ namespace cl_backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Выполняет вход пользователя в систему
+        /// </summary>
+        /// <param name="request">Данные для входа (username и password)</param>
+        /// <returns>Ответ с JWT токеном и данными пользователя при успешном входе</returns>
         [HttpPost("/login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
@@ -115,6 +132,11 @@ namespace cl_backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Изменяет пароль текущего аутентифицированного пользователя
+        /// </summary>
+        /// <param name="request">Данные для смены пароля (текущий и новый пароль)</param>
+        /// <returns>Ответ с результатом операции смены пароля</returns>
         [Authorize]
         [HttpPost("/change-password")]
         public IActionResult ChangePassword([FromBody] ChangePasswordRequest request)
@@ -175,6 +197,12 @@ namespace cl_backend.Controllers
             }
         }
 
+        /// <summary>
+        /// Создает ClaimsIdentity для пользователя после проверки учетных данных
+        /// </summary>
+        /// <param name="username">Имя пользователя (email)</param>
+        /// <param name="password">Пароль пользователя</param>
+        /// <returns>ClaimsIdentity пользователя или null если учетные данные неверны</returns>
         private ClaimsIdentity? GetIdentity(string username, string password)
         {
             var user = _context.Users.FirstOrDefault(u => u.Login == username);
